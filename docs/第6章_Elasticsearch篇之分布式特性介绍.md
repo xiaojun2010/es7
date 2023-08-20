@@ -40,11 +40,11 @@
 
     <img src="img06/02.png" alt="image-20230820122021736" style="zoom:40%;" />
 
-
-
     <img src="img06/01.png" alt="image-20230820121533381" style="zoom:40%;" />
-    
+
     <img src="img06/03.png" alt="image-20230820122059377" style="zoom:30%;" />
+
+
 
 - Es 集群相关的数据称为 cluster state，主要记录如下信息：
 
@@ -310,24 +310,147 @@
 - 同一个集群有2个master，而且维护不同的cluster state，网络恢复后无法选择正确的master
 
   <img src="img06/31.png" alt="image-20230820142054666" style="zoom:30%;" />
-  
+
 - 解决方案为仅在可选举 master-eligible 节点数大于等于 quorum 时才可以进行master选举
 
-  - `quorum = master - eligible 节点数/2 + 1`，例如3个master-eligible 节点时，quorum = 2
-  
+  - `quorum = master-eligible 节点数/2 + 1`，例如3个master-eligible 节点时，quorum = 2
+
   - 设定 `discovery.zen.minimum_master_nodes` 为 quorum 即可避免脑裂
-  
+
     <img src="img06/32.png" alt="image-20230820142722383" style="zoom:30%;" />
-  
-  - 
+
+  -
 
 
 
 ## 14 倒排索引的不可变更
 
 - 倒排索引一旦生成，不能更改
+
 - 其好处如下：
+
   - 不用考虑并发写文件的问题，杜绝锁机制带来的性能问题
   - 由于文件不能更改，可以充分利用文件系统缓存，只需载入一次，只要内存足够
   - 对该文件的读取都会从内存读取，性能高
-- 
+  - 利于生成缓存数据
+  - 利于对文件进行压缩存储，节省磁盘和内存存储空间
+
+- 坏处为需要写入新文档时，必须重新构建倒排序索引文件，然后替换老文件后，新文档才能被检索，导致文档实时性差
+
+
+
+### 14.1 文档搜索实时性 - 问题
+
+- 文档搜索实时性
+
+  - 有以下问题：
+
+  <img src="img06/33.png" alt="image-20230820203846823" style="zoom:40%;" />
+
+<img src="img06/34.png" alt="image-20230820204014511" style="zoom:40%;" />
+
+- 解决方案是新文档直接生成新的倒排序索引文件，查询时同时查询所有（新旧）倒排序文件，然后做结果的汇总计算即可
+
+  <img src="img06/35.png" alt="image-20230820204324630" style="zoom:30%;" />
+
+  - lucene 便是采用了这种方案，它构建的单个倒排索引称为 segment ，合在一起称为 Index ，与ES 中的Index 概念不同。ES 中的 Shard 对应一个 Lucene Index。
+
+  - Lucene 会有一个专门的文件来记录所有的segment信息，称为 `commit point `
+
+    <img src="img06/36.png" alt="image-20230820204711458" style="zoom:40%;" />
+
+  -
+
+### 14.2 文档搜索实时性 - refresh
+
+- segment 写入磁盘的过程依然很耗时，可以借助文件系统缓存的特性，先将 segment **在缓存中创建并开放查询来进一步提升实时性**，该过程在es中被称为 refresh
+
+- 在refresh之前文档会先存储在一个 buffer 中，refresh 时将buffer 中的所有文档清空并生成 segment
+
+  <img src="img06/37.png" alt="image-20230820205558480" style="zoom:40%;" />
+
+  <img src="img06/38.png" alt="image-20230820205639860" style="zoom:40%;" />
+
+  es默认每1秒执行一次 refresh ，因此文档的实时性被提高到1秒，这也是 es 被称为近实时（Near Real Time）的原因
+
+- **refresh 发生的时机**
+
+  主要有如下几种情况：
+
+  - 间隔时间达到时，通过` index.settings.refresh_interval `来设定，默认是1秒
+  - Index.buffer 占满时，其大小通过` indices.memory.index_buffer_size `设置，默认为jvm heap 的10%，所有shard共享
+  - flush 发生时也会发生 refresh
+
+### 14.3 文档搜索实时性 - translog
+
+- 如果在内存中的 segment 还没有写入磁盘前发生了宕机，那么其中的文档就无法恢复了，如何解决这个问题？？
+
+  - es 引入 translog 机制。写入文档到 buffer 时，同时将该操作写入 translog
+
+  - translog 文件会即时写入磁盘（fsync），6.x 默认每个请求都会落盘，可以修改为每5秒写一次，这样风险便是丢失5秒内的数据，相关配置为 `index.translog.*`
+
+  - es启动时会检查 translog 文件，并从中恢复数据
+
+    <img src="img06/39.png" alt="image-20230820210401764" style="zoom:40%;" />
+
+    fsync ：写磁盘
+
+    <img src="img06/40.png" alt="image-20230820210607258" style="zoom:40%;" />
+
+  -
+
+-
+
+### 14.3 文档搜索实时性 - flush
+
+flush 负责将内存中的 segment 写入磁盘，主要做如下的工作：
+
+- 将 translog 写入磁盘
+
+- 将index buffer 清空，其中的文档生成一个新的segment，相当于一个refresh操作
+
+- 更新commit point 并写入磁盘
+
+- 执行fsync 操作，将内存中的segment 写入磁盘
+
+- 删除旧的translog文件
+
+  <img src="img06/41.png" alt="image-20230820211505954" style="zoom:40%;" />
+
+  commit point 维护这些segment文件
+
+
+
+- **flush发生的时机**
+
+  主要有如下几种情况：
+
+  - 间隔时间达到时，默认是30分钟，5.x 之前可以通过 `index.translog.flush_threshold_period`修改，之后无法修改
+  - translog 占满时，其大小可以通过 `index.translog.flush_threshhold_size`控制，默认是512mb，每个index有自己的translog
+
+-
+
+### 14.5 文档搜索实时性 - 删除与更新文档
+
+- segment 一旦生成就不能更改，如果要删除文档改如何操作？
+  - Lucene 专门维护一个 .del 的文件，记录所有已经删除的文档，注意 .del 上记录的是文档在 Lucene 内部的id
+  - 在查询结果返回前会过滤掉 .del 中所有文档
+- 更新文档如何进行？
+  - 首先删除文档，然后再创建新文档
+-
+
+## 15  整体视角
+
+### 15.1 ES Index 与 Lucene Index 的术语对照
+
+如下所示：
+
+<img src="img06/42.png" alt="image-20230820213143529" style="zoom:40%;" />
+
+### 15.2 Segment Merging
+
+每一次 refresh （每秒一次）就会生成一个 segment，每一次 flush 就会写到磁盘里，每一次查询是对所有 segment 进行查询：
+
+- 随着segment的增多，由于一次查询时 segment 数增多，查询速度会变慢
+- es 会定时在后台进行 segment metge 的操作，减少 segment 的数量
+- 通过 force_merge api 可以手动强制做 segment merge 的操作
