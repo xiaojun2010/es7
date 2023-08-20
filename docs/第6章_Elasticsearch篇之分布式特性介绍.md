@@ -1,4 +1,10 @@
-# 1. 分布式特性
+# 第7章 Elasticsearch 篇之深入了解 Search 的运行机制
+
+[TOC]
+
+
+
+## 1. 分布式特性
 
 - es支持集群模式，是一个分布式系统，其好处主要有2个：
 
@@ -21,11 +27,12 @@
   - Run bin/cerebro(or bin/cerebro.bat if on Windows)
   - Access on [http://localhost:9000](http://localhost:9000/)
 
-  ###
 
 
 
-# 2. 启动一个节点
+
+
+## 2. 启动一个节点
 
 - 运行如下命令可以启动一个es节点实例
 
@@ -33,7 +40,7 @@
 
     <img src="img06/02.png" alt="image-20230820122021736" style="zoom:40%;" />
 
-    
+
 
     <img src="img06/01.png" alt="image-20230820121533381" style="zoom:40%;" />
     
@@ -46,7 +53,7 @@
 
 
 
-# 3 Master Node
+## 3 Master Node
 
 - 可以修改cluster state 的节点称为 master 节点，一个集群只能有一个
 
@@ -64,7 +71,7 @@
 
 
 
-# 4 创建一个索引
+## 4 创建一个索引
 
 - 通过如下api创建一个索引
 
@@ -76,7 +83,7 @@
 
 -
 
-# 5 Coordinating Node
+## 5 Coordinating Node
 
 - 处理请求的节点即为 Coordinating 节点，该节点为所有节点的默认角色，不能取消
 
@@ -88,7 +95,7 @@
 
 -
 
-# 6 Data Node
+## 6 Data Node
 
 - 存储数据的节点即为 data 节点，默认节点都是data 类型，相关配置如下：
 
@@ -100,22 +107,22 @@
 
 -
 
-# 7 单点问题
+## 7 单点问题
 
 - 如果node1停止服务，集群停止服务
 
 
 
-# 8 新增一个节点
+## 8 新增一个节点
 
 - 运行如下命令可以启动一个es节点实例
 
   - bin/elasticsearch -E cluster.name=my_cluster -E node.name=node2
-  
+
   - <img src="img06/10.png" alt="image-20230820124740021" style="zoom:30%;" />
-  
+
     <img src="img06/09.png" alt="image-20230820124707800" style="zoom:30%;" />
-  
+
     <img src="img06/11.png" alt="image-20230820124822927" style="zoom:30%;" />
     -
 
@@ -131,7 +138,7 @@
 
 
 
-# 9 提高系统可用性
+## 9 提高系统可用性
 
 - 服务可用性
 
@@ -196,9 +203,9 @@
 - 分片数的设定很重要，需要提前规划好
   - 过小会导致后续无法通过增加节点实现水平扩容
   - 过大会导致一个节点上分布过多分片，造成资源浪费，同时会影响查询性能
-- 
+  -
 
-# 10 Cluster Health 集群监控状态
+## 10 Cluster Health 集群监控状态
 
 - 通过如下api 可以查看集群监控状况，包括以下3种：
 
@@ -214,9 +221,9 @@
 
     注意：只是集群状态，并非集群不能访问，**<font color='red' size=5>Red状态也可以对外提供服务</font>**
 
-- 
+-
 
-# 11 故障转移
+## 11 故障转移
 
 - 集群由3个节点组成，如下所示，此时集群状态是green
 
@@ -236,11 +243,11 @@
 
     <img src="img06/24.png" alt="image-20230820134053608" style="zoom:30%;" />
 
-  - 
+  -
 
-- 
 
-# 12 文档分布式存储
+
+## 12 文档分布式存储
 
 - 文档最终会存储在分片上，如下图所示：
 
@@ -262,15 +269,65 @@
       - 不可取，因为需要维护文档到分片的映射关系，成本巨大
     - 根据文档值实时计算对应的分片
 
-    
+
 
 - 文档到分片的映射算法
 
   - es 通过如下公式计算文档对应的分片
     - shard = hash（routing）% numbet_of_primary_shards
     - Hash 算法保证可以将数据均匀地分散在分片中
-    - routing 是一个关键参数，默认是文档id，也可以自行指定
+    - routing 是一个关键参数，默认是文档id，也可以自行指定（routing可以自行指定）
+  - 该算法与主分片数相关，这也是**分片数一旦确定后便不能更改**的原因
+
+- 文档创建的流程
+
+  <img src="img06/26.png" alt="image-20230820140909222" style="zoom:40%;" />
+
+- 文档读取流程
+
+  <img src="img06/27.png" alt="image-20230820141109744" style="zoom:40%;" />
+
+- 文件批量创建的流程
+
+  <img src="img06/28.png" alt="image-20230820141341508" style="zoom:40%;" />
+
+- 批量读取的流程
+
+  <img src="img06/29.png" alt="image-20230820141456717" style="zoom:30%;" />
+
+## 13 脑裂问题
+
+- 脑裂问题，英文为 split-brain，是分布式系统中的经典网络问题，如下图所示：
+
+  - 3个节点组成的集群，突然 node1 的网络和其他2个节点中断
+
+    <img src="img06/30.png" alt="image-20230820141702110" style="zoom:30%;" />
+
+  - node2 和 node3 会重新选举master，比如 node2 成为新的 master，此时会更新 cluster state
+
+  - node1 自己组成集群后，也会更新 cluster state
+
+- 同一个集群有2个master，而且维护不同的cluster state，网络恢复后无法选择正确的master
+
+  <img src="img06/31.png" alt="image-20230820142054666" style="zoom:30%;" />
+  
+- 解决方案为仅在可选举 master-eligible 节点数大于等于 quorum 时才可以进行master选举
+
+  - `quorum = master - eligible 节点数/2 + 1`，例如3个master-eligible 节点时，quorum = 2
+  
+  - 设定 `discovery.zen.minimum_master_nodes` 为 quorum 即可避免脑裂
+  
+    <img src="img06/32.png" alt="image-20230820142722383" style="zoom:30%;" />
+  
   - 
 
-- 
 
+
+## 14 倒排索引的不可变更
+
+- 倒排索引一旦生成，不能更改
+- 其好处如下：
+  - 不用考虑并发写文件的问题，杜绝锁机制带来的性能问题
+  - 由于文件不能更改，可以充分利用文件系统缓存，只需载入一次，只要内存足够
+  - 对该文件的读取都会从内存读取，性能高
+- 
