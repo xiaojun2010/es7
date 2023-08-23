@@ -1,4 +1,7 @@
 - elasticsearch7.X
+  - [第1章 课程概述](第1章_课程概述.md)
+  - [第2章 Elasticsearch 篇之 入门](第2章_Elasticsearch_篇之_入门.md)
+  - [第3章 Elasticsearch 篇之倒排索引与分词](第3章_Elasticsearch_篇之倒排索引与分词.md)
   - [第6章 Elasticsearch 篇之分布式特性介绍](第6章_Elasticsearch篇之分布式特性介绍.md)
   - [第7章 Elasticsearch 篇之深入了解 Search 的运行机制](第7章_Elasticsearch篇之深入了解Search的运行机制.md)
   - [第9章 Elasticsearch 篇之数据建模](第9章_Elasticsearch篇之数据建模.md)

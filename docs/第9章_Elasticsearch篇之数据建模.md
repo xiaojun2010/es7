@@ -638,7 +638,7 @@ Join 6.x之后才有，之前使用的是type，多type方式
 - ES提供了现成的API用于完成该工作
   - _update_by_query 在现有索引上重建
   - _reindex 在其他索引上重建
-  -
+  
 
 ## 8.1 Reindex - _update_by_query
 
