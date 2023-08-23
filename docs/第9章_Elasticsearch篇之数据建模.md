@@ -4,7 +4,7 @@
 
 
 
-# 1 什么是数据建模
+# 9.1 什么是数据建模
 
 - 英文为Data Modeling，为创建数据模型的过程
 
@@ -16,7 +16,7 @@
 
 
 
-# 2 数据建模的过程
+# 9.2 数据建模的过程
 
 - 概念模型
 
@@ -36,7 +36,7 @@
 
 
 
-# 3 数据建模的意义
+# 9.3 数据建模的意义
 
 <img src="./img09/01.png" alt="image-20230819223106731" style="zoom:30%;"  />
 
@@ -46,7 +46,7 @@
 
 
 
-# 4 ES中的数据建模
+# 9.4 ES中的数据建模
 
 - ES是基于Lucene以**倒排索引**为基础实现的存储体系，不遵循关系型数据库中的范式约定
 
@@ -54,7 +54,7 @@
 
 
 
-# 5 mapping 字段的相关设置
+# 9.5 mapping 字段的相关设置
 
 - enabled
 
@@ -122,7 +122,7 @@
 
 
 
-# 6 mapping字段属性的设定流程
+# 9.6 mapping字段属性的设定流程
 
 <img src="img09/03.png" alt="image-20230819223728303" style="zoom:100%;"  />
 
@@ -137,7 +137,7 @@
 
 
 
-## 6.1 是何种类型？
+## 9.6.1 是何种类型？
 
 - 字符串类型
 
@@ -155,7 +155,7 @@
 
   > 比如bool类型、日期、地理位置数据等
 
-## 6.2 是否需要检索
+## 9.6.2 是否需要检索
 
 - 完全不需要检索、排序、聚合分析的字段
 
@@ -183,7 +183,7 @@
 
 -
 
-## 6.3 实例
+## 9.6.3 实例
 
 - 博客文章blog_index
 
@@ -341,7 +341,7 @@
 
   - 网络地址 url
 
-# 7 关联关系处理
+# 9.7 关联关系处理
 
 ES不擅长处理关系型数据库中的关联关系，比如文章表blog与评论表comment之间通过blog_id关联，在ES中可以通过如下2种手段变相解决:
 
@@ -360,7 +360,7 @@ ES不擅长处理关系型数据库中的关联关系，比如文章表blog与�
 | <img src="img09/08.png" alt="image-20230820010459363" style="zoom:20%;" /> | <img src="img09/09.png" alt="image-20230820010459363" style="zoom:60%;" /> |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 
-## 7.1 关联关系处理-nested object
+## 9.7.1 关联关系处理-nested object
 
 <img src="img09/10.png" alt="image-20230820010930623" style="zoom:30%;"  />
 
@@ -385,7 +385,7 @@ Comments默认是Object Array，存储结构类似下面的形式：
 
 为什么nest object可以解决这个问题呢？
 
-### 7.1.1 Nest Object Array的存储结构类似下面的形式
+### 9.7.1.1 Nest Object Array的存储结构类似下面的形式
 
 <img src="img09/15.png" alt="image-20230820012622752" style="zoom:30%;"   />
 
@@ -577,9 +577,9 @@ GET blog_index_nested/_search
 }
 ```
 
-## 7.2 关联关系处理 - Parent/Child
+## 9.7.2 关联关系处理 - Parent/Child
 
-### 7.2.1 ES提供了类似关系数据库中join的实现方式，使用`join`数据类型实现
+### 9.7.2.1 ES提供了类似关系数据库中join的实现方式，使用`join`数据类型实现
 
 <img src="img09/19.png" alt="image-20230820020927091" style="zoom:40%;" />
 
@@ -589,29 +589,29 @@ Join 6.x之后才有，之前使用的是type，多type方式
 
 **注意：子文档必须好父文档在一个shard里，否则查询时会有问题**
 
-### 7.2.2 常见query语法包括如下几种
+### 9.7.2.2 常见query语法包括如下几种
 
 - parent_id 返回某父文档的子文档
 - has_child 返回包含某子文档的父文档
 - has_parent 返回包含某父文档的子文档
 
-#### 7.2.2.1 parent_id查询：返回某父文档的子文档
+#### 9.7.2.2.1 parent_id查询：返回某父文档的子文档
 
 <img src="img09/21.png" alt="image-20230820022018241" style="zoom:40%;" />
 
 注释：返回 父文档id=2 的所有子文档类型为 comment 的子文档
 
-#### 7.2.2.2 has_child查询：返回包含某子文档的父文档
+#### 9.7.2.2.2 has_child查询：返回包含某子文档的父文档
 
 <img src="img09/22.png" alt="image-20230820022434276" style="zoom:50%;" />
 
 返回子文档类型comment的字段comment 包含world 的所有父文档
 
-#### 7.2.2.3 has_parent查询：返回包含某父文档的子文档
+#### 9.7.2.2.3 has_parent查询：返回包含某父文档的子文档
 
 <img src="img09/23.png" alt="image-20230820022647890" style="zoom:40%;" />
 
-#### 7.2.2.4 例子
+#### 9.7.2.2.4 例子
 
 <img src="img09/24.png" alt="image-20230820024116740" style="zoom:100%;" />
 
@@ -623,13 +623,13 @@ Join 6.x之后才有，之前使用的是type，多type方式
 
 ![image-20230820025039835](img09/27.png)
 
-### 7.3 Nested Object vs Parent/Child
+### 9.7.3 Nested Object vs Parent/Child
 
 <img src="img09/28.png" alt="image-20230820031008390" style="zoom:50%;" />
 
 
 
-# 8 reindex
+# 9.8 reindex
 
 - 重建所有数据的过程，一般发生在如下情况：
   - mapping设置变更，比如字段类型变化、分词器字典更新等
@@ -640,7 +640,7 @@ Join 6.x之后才有，之前使用的是type，多type方式
   - _reindex 在其他索引上重建
   
 
-## 8.1 Reindex - _update_by_query
+## 9.8.1 Reindex - _update_by_query
 
 在原索引上重建
 
@@ -667,7 +667,7 @@ GET blog_index/_doc/2
 
 
 
-## 8.2 Reindex - _reindex
+## 9.8.2 Reindex - _reindex
 
 将原索引数据重建到目的索引里面
 
@@ -698,7 +698,7 @@ GET blog_new_index/_search
 
 ```
 
-## 8.3 Redindex - Task
+## 9.8.3 Redindex - Task
 
 - 数据重建的时间受源索引文档规模的影响，当规模越大时，所需时间越多，此时需要通过设定url参数 `wait_for_completion 为false` 来异步执行，ES以task来描述此类执行任务
 - ES提供了Task API 来查看任务的执行进度和相关数据
@@ -734,9 +734,9 @@ GET _tasks/Dd2NWBj0T0CihpRoRYM0gg:1260096
 
 
 
-# 9 其他建议
+# 9.9 其他建议
 
-## 9.1 数据模型版本管理
+## 9.9.1 数据模型版本管理
 
 - 对mapping进行版本管理
 
@@ -748,7 +748,7 @@ GET _tasks/Dd2NWBj0T0CihpRoRYM0gg:1260096
 
 -
 
-## 9.2 防止字段过多
+## 9.9.2 防止字段过多
 
 - 字段过多主要有如下的坏处：
   - 难于维护，当字段成百上千时，基本很难有人能明确知道每个字段的含义
@@ -944,14 +944,14 @@ GET demo_key_value/_search
 
 对 cookieName 做聚合分析，则key/value 无法实现，因为分成2个字段
 
-### 9.2.1 key/value 方式详解
+### 9.9.2.1 key/value 方式详解
 
 - 虽然通过这种方式可以极大地减少field数量，但也有一些明显的坏处
   - query 语句复杂度飙升，且有一些可能无法实现，比如聚合分析相关的
   - 不利于在Kibana中做可视化分析
   -
 
-### 9.2.2 防止字段过多
+### 9.9.2.2 防止字段过多
 
 - 一般字段过多的原因是由于没有高质量的数据建模导致的，比如 dynamic 设置为 true
 - 考虑拆分多个索引来解决
