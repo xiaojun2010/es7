@@ -63,13 +63,13 @@
 
   - node.master:true
 
-    <img src="img06/04.png" alt="image-20230820123209245" style="zoom:30%;" />
-
-    <img src="img06/05.png" alt="image-20230820123509077" style="zoom:30%;" />
-
-  -
-
-
+    > <img src="img06/04.png" alt="image-20230820123209245" style="zoom:30%;" />
+    >
+    > <img src="img06/05.png" alt="image-20230820123509077" style="zoom:110%;" />
+    
+    
+  
+  
 
 ## 6.4 创建一个索引
 
@@ -203,7 +203,7 @@
 - 分片数的设定很重要，需要提前规划好
   - 过小会导致后续无法通过增加节点实现水平扩容
   - 过大会导致一个节点上分布过多分片，造成资源浪费，同时会影响查询性能
-  -
+  
 
 ## 6.10 Cluster Health 集群监控状态
 
