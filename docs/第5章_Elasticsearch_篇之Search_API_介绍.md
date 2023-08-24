@@ -200,7 +200,7 @@ GET test_search_index/_search?q=username:"alfred way"
 
   > name中包含 moat 或者 boat的文档
   >
-  > <img src="/Users/zhangxiaojun/work/study/es/workspace/es7/docs/img05/16.png" alt="image-20230824153721720" style="zoom:50%;" />
+  > <img src="img05/16.png" alt="image-20230824153721720" style="zoom:50%;" />
 
 - 比较吃内存
 
