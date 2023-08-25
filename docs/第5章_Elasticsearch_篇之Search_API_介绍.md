@@ -424,6 +424,14 @@ _source : 存储的是原始内容
 
 
 
+##### 5.3.2.2.4 match query - multi_match
+
+多字段查询
+
+
+
+
+
 ## 5.4 相关性算分
 
 <img src="img05/28.png" alt="image-20230824173117253" style="zoom:40%;" />
@@ -1265,3 +1273,44 @@ GET test_search_index/_search
 
 ```
 
+
+
+## 5.14 查全率查准率
+
+- **查全率：**正确的结果有n个，查询出来正确的有m ，m/n
+- **查准率：**查出的n 个文档有m个正确 m/n
+- 两者不可兼得，但可以调整排序
+
+<img src="img05/71.png" alt="image-20230825162533603" style="zoom:50%;" />
+
+
+
+```json
+
+#多字段查询
+GET test_search_index/_search
+{ 
+  "query": {
+    "multi_match": {
+      "query": "alfred java",
+      "fields": ["username","job"],
+      "type": "most_fields"
+    }
+  }
+}
+
+GET test_search_index/_search
+{ 
+  "query": {
+    "multi_match": {
+      "query": "alfred java",
+      "fields": ["username^10","job^0.1"],
+      "type": "most_fields"
+    }
+  }
+}
+```
+
+但是不够灵活，可以用 functionscore 自定义得分
+
+<img src="img05/72.png" alt="image-20230825171050957" style="zoom:50%;" />

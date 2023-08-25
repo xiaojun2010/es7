@@ -284,6 +284,37 @@ es 是依靠json文档的字段类型来实现自动识别字段类型，支持�
 
 <img src="img04/17.png" alt="image-20230823222320244" style="zoom:30%;" />
 
+创建时指定format
+
+<img src="img05/70.png" alt="image-20230825153017056" style="zoom:50%;" />
+
+```
+
+PUT /movie
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "properties": {
+      "title":{"type": "text","analyzer": "english"},
+      "tagline":{"type": "text","analyzer": "english"},
+      "release_date":{
+        "type": "date",
+        "format": "8yyyy/MM/dd||yyyy/M/dd||yyyy/MM/d||yyyy/M/d"
+      },
+      "popularity":{"type": "double"}
+    }
+  }
+}
+
+GET /movie/_mapping
+
+```
+
+
+
 ### 4.6.3 数字自动识别
 
 字符串是数字时，默认不会自动识别为整型，因为字符串中出现数字是完全合理的

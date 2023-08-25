@@ -961,3 +961,21 @@ GET demo_key_value/_search
 # 9.10 字段类型-flattened
 
 详见   flattened
+
+
+
+# 9.11 其他
+
+https://blog.csdn.net/laoyang360/category_9266239.html
+
+https://edu.csdn.net/course/detail/35551
+
+https://edu.csdn.net/course/detail/26234
+
+# function_score
+
+https://blog.csdn.net/lijingjingchn/article/details/106405577
+
+https://blog.csdn.net/lijingjingchn/article/details/106408774
+
+https://blog.csdn.net/wwd0501/article/details/78652850?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7ERate-1-78652850-blog-106405577.235%5Ev38%5Epc_relevant_sort_base1&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7ERate-1-78652850-blog-106405577.235%5Ev38%5Epc_relevant_sort_base1&utm_relevant_index=2

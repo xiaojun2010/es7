@@ -8,3 +8,4 @@
   - [第7章 Elasticsearch 篇之深入了解 Search 的运行机制](第7章_Elasticsearch篇之深入了解Search的运行机制.md)
   - [第9章 Elasticsearch 篇之数据建模](第9章_Elasticsearch篇之数据建模.md)
     - [Elasticsearch 字段类型 flattened](flattened/es-字段类型-flattened.md)
+    - [Elasticsearch 警惕使用 wildcard 检索！然后呢？](wildcard/Elasticsearch_wildcard.md)

@@ -1,4 +1,4 @@
-
+```json
 DELETE flattened_test_index
 
 PUT flattened_test_index
@@ -249,3 +249,5 @@ GET flattened_test_index/_search
     }
   }
 }
+
+```

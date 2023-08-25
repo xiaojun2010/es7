@@ -81,7 +81,7 @@
 
   <img src="img06/06.png" alt="image-20230820123733011" style="zoom:30%;" />
 
--
+
 
 ## 6.5 Coordinating Node
 
@@ -91,9 +91,6 @@
 
     <img src="img06/07.png" alt="image-20230820124233931" style="zoom:30%;" />
 
-  -
-
--
 
 ## 6.6 Data Node
 
@@ -221,8 +218,6 @@
 
     注意：只是集群状态，并非集群不能访问，**<font color='red' size=5>Red状态也可以对外提供服务</font>**
 
--
-
 ## 6.11 故障转移
 
 - 集群由3个节点组成，如下所示，此时集群状态是green
@@ -243,7 +238,6 @@
 
     <img src="img06/24.png" alt="image-20230820134053608" style="zoom:30%;" />
 
-  -
 
 
 
@@ -294,6 +288,26 @@
 - 批量读取的流程
 
   <img src="img06/29.png" alt="image-20230820141456717" style="zoom:30%;" />
+  
+  - 新建索引过程
+  
+  <img src="img05/68.png" alt="image-20230825145810408" style="zoom:30%;" />
+  
+  > - 首先新建索引请求会被发到master节点上，即使发到其他非master节点，也会被转发给master节点，因为只有master节点知道所有索引的状态
+  >
+  >   
+  
+  - 取回文档
+  
+    <img src="img05/69.png" alt="image-20230825150458915" style="zoom:30%;" />
+  
+    > get请求过来，经过路由计算，该文档ID输入 0 partion，而非 1 partion，此时master 会做一个负载均衡，比如上次请求访问的是 node1 上的R0 ，下次请求就访问 node2 的R0，尽可能均匀分散读操作，此时node1 作为读操作的负载均衡器；
+    >
+    > 有可能读请求是node3上，因为node3也具备分布式节点上所有metadata 管理，只不过node3上的metadata信息不一定比 master 全（因为master是负责所有写请求），此时node3 上的metadata 可能滞后于node1，但是因为读请求问题不大，所以node3页可以找到对应的 R0 位置，用来做负载均衡
+  
+  - master 节点只负责路由写请求，读请求可以由每个节点自行处理，这样就可以实现 负载均衡 + 读写分离 的分布式效率提升功效
+
+
 
 ## 6.13 脑裂问题
 
@@ -319,7 +333,7 @@
 
     <img src="img06/32.png" alt="image-20230820142722383" style="zoom:30%;" />
 
-  -
+  
 
 
 
