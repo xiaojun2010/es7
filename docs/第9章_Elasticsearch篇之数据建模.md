@@ -955,3 +955,9 @@ GET demo_key_value/_search
 
 - 一般字段过多的原因是由于没有高质量的数据建模导致的，比如 dynamic 设置为 true
 - 考虑拆分多个索引来解决
+
+
+
+# 9.10 字段类型-flattened
+
+详见   flattened

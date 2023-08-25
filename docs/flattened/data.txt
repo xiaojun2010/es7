@@ -1,0 +1,251 @@
+
+DELETE flattened_test_index
+
+PUT flattened_test_index
+{
+  "mappings": {
+    "properties": {
+      "dynamic":"false",
+      "title":{
+        "type": "keyword"
+      },
+      "updateTime":{
+        "type": "integer"
+      }
+    }
+  }
+}
+
+#新建一个doc，设置一个不被mapping的字段 testDynamicFalse
+
+POST flattened_test_index/_doc/4
+{
+  "testDynamicFalse":"DynamicFalse"
+}
+
+#对doc为4的文档进行docId的检索，发现此文档已经写入es，并可以返回
+GET flattened_test_index/_doc/4
+
+#对testDynamicFalse字段进行检索，发现不能检索到。验证dynamic："false"的结果：dynamic 设置为 false 后，新来的非 mapping 预设字段数据可以写入，但是：不能被检索，仅支持 Get 获取文档的方式通过 _source 查看详情内容。
+
+GET flattened_test_index/_search
+{
+  "query": {
+    "term": {
+      "FIELD": {
+        "testDynamicFalse":"DynamicFalse"
+      }
+    }
+  }
+}
+
+#设置为 strict 后，再插入未mapping字段数据，会报错如下
+
+
+DELETE flattened_test_index
+
+PUT flattened_test_index
+{
+  "mappings": {
+    "dynamic":"strict",
+    "properties": {
+      "title":{
+        "type": "keyword"
+      },
+      "updateTime":{
+        "type": "integer"
+      }
+    }
+  }
+}
+
+POST flattened_test_index/_doc/4
+{
+  "testDynamicFalse":"DynamicFalse"
+}
+
+DELETE flattened_test_index
+
+PUT flattened_test_index
+{
+  "mappings": {
+    "dynamic":"strict",
+    "properties": {
+      "lables":{
+        "type": "flattened"
+      },
+      "title":{
+        "type": "keyword"
+      },
+      "updateTime":{
+        "type": "integer"
+      }
+    }
+  }
+}
+
+POST flattened_test_index/_doc/1
+{
+  "title":"test1",
+  "updateTime":110000000,
+  "lables":{
+    "cargo":"costa",
+    "driver":[
+        "nestle",
+        "kitKat"
+      ],
+      "timestamp":{
+        "start":1541458026,
+        "end":1541457010
+      }
+  }
+}
+
+POST flattened_test_index/_doc/2
+{
+  "title":"world",
+  "updateTime":1123456000,
+  "lables":{
+    "cargo":"nike",
+    "driver":[
+        "tesla",
+        "haval"
+      ],
+      "timestamp":{
+        "start":1541458765,
+        "end":1541457912
+      }
+  }
+}
+
+
+GET flattened_test_index/_mapping
+
+#检索 这里针对单个字段labels、子字段labels.cargo、labels.timestamp.start做了terms和range查询，均可以检索到
+
+GET flattened_test_index/_search
+{
+  "query": {
+    "term": {
+      "lables": "kitKat"
+    }
+  }
+}
+
+
+GET flattened_test_index/_search
+{
+  "query": {
+    "term": {
+      "lables.cargo": "nike"
+    }
+  }
+}
+
+GET flattened_test_index/_search
+{
+  "query": {
+    "range": {
+      "lables.timestamp.start": {
+        "from": 10,
+        "to": 1541458765,
+        "include_lower":false,
+        "include_upper":true,
+        "boost": 1
+      }
+    }
+  }
+}
+
+#更新labels字段，添加其他字段，并查看mapping及检索 这里在labels字段下新增了truck字段，并赋值；post新索引后，发现mapping字段依然只有labels字段，没有新增字段；并且检索做terms查询，依旧可以检索到
+POST flattened_test_index/_doc/3
+{
+  "title":"test3",
+  "lables":{
+    "truck":[
+        "flatcar",
+        "trailer"
+      ]
+  }
+}
+
+GET flattened_test_index/_mapping
+
+GET flattened_test_index/_search
+{
+  "query": {
+    "term": {
+      "lables": "flatcar"
+    }
+  }
+}
+
+GET flattened_test_index/_search
+{
+  "query": {
+    "term": {
+      "lables.truck": "trailer"
+    }
+  }
+}
+
+#使用script脚本时，可以从正排中获取doc字段
+GET flattened_test_index/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "_source": ["lables.updateTime"],
+  "sort": [
+    {
+      "_script": {
+        "script":{
+          "id":"flattened_test_script"
+        },
+        "type":"number",
+        "order": "desc"
+      }
+    }
+  ]
+}
+
+#聚合统计只能看出labels中有多少buckets，对应的key看不到。
+GET flattened_test_index/_search
+{
+  "size": 10,
+  "aggs": {
+    "test_group": {
+      "terms": {
+        "field": "lables"
+      }
+    }
+  }
+}
+
+#无法进行number类型的统计、数值计算
+GET flattened_test_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "avgs": {
+      "avg": {
+        "field": "lables.timestamp.start"
+      }
+    }
+  }
+}
+
+#无法使用highLight 高亮语法
+GET flattened_test_index/_search
+{
+  "query": {
+    "term": {
+      "lables": "costa"
+    }
+  },
+  "highlight": {
+    "fields": {
+      "lables": {}
+    }
+  }
+}
